@@ -3,17 +3,27 @@ import requests
 from bs4 import BeautifulSoup
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from apscheduler.schedulers.background import BackgroundScheduler
+from flask import Flask, request
 
-# Telegram Bot Token (Environment Variable बाट लिन्छ)
+# Flask App for Webhook
+app = Flask(__name__)
+
+# Telegram Bot Token र Webhook URL
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+WEBHOOK_URL = "https://tg1nepse.onrender.com/webhook"
+
+# Global Data Storage (Refresh हुने ठाउँ)
+latest_data = {
+    "symbol_data": {},
+    "general_data": {}
+}
 
 # Scrape Sharesansar Data for Specific Symbol
 def scrape_symbol_data(symbol_name):
     url = "https://www.sharesansar.com/live-trading"
     response = requests.get(url)
     soup = BeautifulSoup(response.content, "html.parser")
-    
-    # Extract all rows in the table
     rows = soup.find_all("tr")
     for row in rows:
         cells = row.find_all("td")
@@ -34,8 +44,6 @@ def scrape_today_share_price():
     url = "https://www.sharesansar.com/today-share-price"
     response = requests.get(url)
     soup = BeautifulSoup(response.content, "html.parser")
-    
-    # Extract table data
     table_data = soup.find_all("td")
     data = {
         "Turn Over": table_data[10].text.strip(),
@@ -43,6 +51,12 @@ def scrape_today_share_price():
         "52 Week Low": table_data[20].text.strip(),
     }
     return data
+
+# Function to Refresh Data Every 10 Minutes
+def refresh_data():
+    global latest_data
+    print("Refreshing data from Sharesansar...")
+    latest_data["general_data"] = scrape_today_share_price()
 
 # Telegram Command Handlers
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -55,15 +69,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Unified Data Handler
 async def handle_symbol_or_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Get Symbol Name from Message Text
+    global latest_data
     symbol_name = update.message.text.strip()
-    
-    # Check if the input is valid (avoid empty inputs or commands being processed)
     if not symbol_name or symbol_name.startswith("/"):
         return
     
     symbol_data = scrape_symbol_data(symbol_name)
-    general_data = scrape_today_share_price()
+    general_data = latest_data["general_data"]
 
     if symbol_data:
         message = (
@@ -78,21 +90,37 @@ async def handle_symbol_or_input(update: Update, context: ContextTypes.DEFAULT_T
             f"52 Week Low: {general_data['52 Week Low']}"
         )
     else:
-        message = f"""Symbol '{symbol_name}' ल्या, फेला परेन त 🤗🤗।
+        message = f""""Symbol '{symbol_name}' 
+        ल्या, फेला परेन त 🤗🤗।
         नआत्तिनु Symbol राम्रो सङ्ग फेरि हान्नु।
-        म जसरी पनि डाटा दिन्छु।"""
-    
+        म जसरी पनि डाटा दिन्छु।""""
     await update.message.reply_text(message)
 
-# Main Function
+# Telegram Webhook Endpoint
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), app.bot)
+    app.update_queue.put(update)
+    return "OK", 200
+
 if __name__ == "__main__":
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    # Initialize Application
+    tg_app = ApplicationBuilder().token(BOT_TOKEN).build()
     
-    # Command Handlers
-    app.add_handler(CommandHandler("start", start))
-    
-    # Message Handler for Symbol Input or Direct Text (No Commands)
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_symbol_or_input))
-    
-    # Run the Bot
-    app.run_polling()
+    # Add Command Handlers
+    tg_app.add_handler(CommandHandler("start", start))
+    tg_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_symbol_or_input))
+
+    # Initialize Scheduler
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(refresh_data, "interval", minutes=10)
+    scheduler.start()
+
+    # Refresh Data Initially
+    refresh_data()
+
+    # Set Webhook
+    tg_app.bot.set_webhook(WEBHOOK_URL)
+
+    # Run Flask App
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8443)))
