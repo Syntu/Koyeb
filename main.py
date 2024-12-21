@@ -1,7 +1,6 @@
 import os
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime, time
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
@@ -48,15 +47,21 @@ def scrape_today_share_price():
 # Telegram Command Handlers
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Welcome 🙏🙏to Syntu's NEPSE💹Bot!\n"
-        "कुन scrip को डाटा चाहियो भन्नुहोस।\n"
-        "म फ्याट्टै खोजिहाल्छु नि 😂\n"
-        "तपाईं Symbol राम्रोसङ्ग Type मात्र गर्नुस।"
+        "Welcome 🙏🙏 to Syntoo's NEPSE💹bot!\n"
+        "के को डाटा चाहियो भन्नुस ?\n"
+        "म फ्याट्टै खोजिहाल्छु 😂😅\n"
+        "Symbol दिनुस जस्तै:- NMB, SHINE, SHPC, SWBBL"
     )
 
 # Unified Data Handler
 async def handle_symbol_or_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Get Symbol Name from Message Text
     symbol_name = update.message.text.strip()
+    
+    # Check if the input is valid (avoid empty inputs or commands being processed)
+    if not symbol_name or symbol_name.startswith("/"):
+        return
+    
     symbol_data = scrape_symbol_data(symbol_name)
     general_data = scrape_today_share_price()
 
@@ -73,8 +78,9 @@ async def handle_symbol_or_input(update: Update, context: ContextTypes.DEFAULT_T
             f"52 Week Low: {general_data['52 Week Low']}"
         )
     else:
-        message = f""Symbol '{symbol_name}' ल्या फेला परेन त 🤗🤗।
-        Symbol राम्रो सङ्ग चेक गेरेर फेरि Try गर्नुस है 💗""
+        message = f"""Symbol '{symbol_name}' ल्या, फेला परेन त 🤗🤗।
+        नआत्तिनु Symbol राम्रो सङ्ग फेरि हान्नु।
+        म जसरी पनि डाटा दिन्छु।"""
     
     await update.message.reply_text(message)
 
@@ -85,7 +91,7 @@ if __name__ == "__main__":
     # Command Handlers
     app.add_handler(CommandHandler("start", start))
     
-    # Message Handler for Symbol Input or Direct Text
+    # Message Handler for Symbol Input or Direct Text (No Commands)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_symbol_or_input))
     
     # Run the Bot
