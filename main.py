@@ -48,10 +48,10 @@ def scrape_today_share_price():
 # Telegram Command Handlers
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Welcome 🙏🙏to Syntu's Stock Market Bot!\n"
-        "कुन scrip को डाटा चाहियो भन्नुस:\n"
-        "म फ्याट्टै खोजिहाल्छु\n"
-        "तपाईं Symbol राम्रोसङ्ग Type मात्र गर्नुस."
+        "Welcome 🙏🙏to Syntu's NEPSE💹Bot!\n"
+        "कुन scrip को डाटा चाहियो भन्नुहोस।\n"
+        "म फ्याट्टै खोजिहाल्छु नि 😂\n"
+        "तपाईं Symbol राम्रोसङ्ग Type मात्र गर्नुस।"
     )
 
 # Unified Data Handler
@@ -73,7 +73,8 @@ async def handle_symbol_or_input(update: Update, context: ContextTypes.DEFAULT_T
             f"52 Week Low: {general_data['52 Week Low']}"
         )
     else:
-        message = f"Symbol '{symbol_name}' ल्या फेला परेन त 🤗🤗 Symbol राम्रो सङ्ग चेक गेरेर फेरि Try गर्नुस है 💗"
+        message = f""Symbol '{symbol_name}' ल्या फेला परेन त 🤗🤗।
+        Symbol राम्रो सङ्ग चेक गेरेर फेरि Try गर्नुस है 💗""
     
     await update.message.reply_text(message)
 
