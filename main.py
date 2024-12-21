@@ -89,13 +89,13 @@ async def handle_symbol_or_input(update: Update, context: ContextTypes.DEFAULT_T
             f"52 Week High: {general_data['52 Week High']}\n"
             f"52 Week Low: {general_data['52 Week Low']}"
         )
-    else:
-        message = f""""Symbol '{symbol_name}' 
-        ल्या, फेला परेन त 🤗🤗।
-        नआत्तिनु Symbol राम्रो सङ्ग फेरि हान्नु।
-        म जसरी पनि डाटा दिन्छु।""""
+else:
+    message = (
+        f"Symbol '{symbol_name}' ल्या, फेला परेन त 🤗🤗।\n"
+        "नआत्तिनु Symbol राम्रो सङ्ग फेरि हान्नु।\n"
+        "म जसरी पनि डाटा दिन्छु।"
+    )
     await update.message.reply_text(message)
-
 # Telegram Webhook Endpoint
 @app.route("/webhook", methods=["POST"])
 def webhook():
