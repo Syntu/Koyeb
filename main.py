@@ -107,7 +107,7 @@ async def handle_symbol_or_input(update: Update, context: ContextTypes.DEFAULT_T
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
-        # Access tg_app in the Flask function by using the global variable
+        # Get tg_app from global space
         update = Update.de_json(request.get_json(force=True), tg_app.bot)  # Fix: Pass tg_app.bot
         tg_app.update_queue.put(update)  # Put the update in the queue for processing
         print(f"Webhook processed: {update}")
