@@ -137,7 +137,10 @@ tg_app.bot.set_webhook(WEBHOOK_URL)
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
-        update = Update.de_json(request.get_json(force=True), tg_app.bot)
+        update_data = request.get_json(force=True)
+        if update_data is None:
+            return "Invalid JSON data", 400
+        update = Update.de_json(update_data, tg_app.bot)
         tg_app.update_queue.put(update)
         print(f"Webhook processed: {update}")
         return "OK", 200
@@ -149,6 +152,6 @@ if __name__ == "__main__":
     try:
         # Run Flask App
         print("Running Flask app...")
-        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8443)))
+        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8443)), debug=True)
     except Exception as e:
         print(f"Error in main: {e}")
