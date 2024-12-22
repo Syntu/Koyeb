@@ -10,7 +10,7 @@ from flask import Flask, request
 app = Flask(__name__)
 
 # Telegram Bot Token र Webhook URL
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")  # Ensure this is set in your environment variables on Render
 WEBHOOK_URL = "https://tg1nepse.onrender.com/webhook"
 
 # Global Data Storage (Refresh हुने ठाउँ)
@@ -107,12 +107,14 @@ async def handle_symbol_or_input(update: Update, context: ContextTypes.DEFAULT_T
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
-        update = Update.de_json(request.get_json(force=True), tg_app.bot)
-        tg_app.update_queue.put(update)
-        return "OK", 200
+        # Access tg_app in the Flask function by using the global variable
+        update = Update.de_json(request.get_json(force=True), tg_app.bot)  # Fix: Pass tg_app.bot
+        tg_app.update_queue.put(update)  # Put the update in the queue for processing
+        print(f"Webhook processed: {update}")
+        return "OK", 200  # Send a success response
     except Exception as e:
-        print(f"Error in webhook: {e}")
-        return "Internal Server Error", 500
+        print(f"Error in webhook processing: {e}")
+        return "Internal Server Error", 500  # Send an error response
 
 if __name__ == "__main__":
     try:
@@ -134,7 +136,8 @@ if __name__ == "__main__":
         # Set Webhook
         tg_app.bot.set_webhook(WEBHOOK_URL)
 
-        # Run Flask App
-        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8443)))
+        # Run Flask App in debug mode
+        print("Running Flask app...")
+        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8443)), debug=True)
     except Exception as e:
         print(f"Error in main: {e}")
