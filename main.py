@@ -43,7 +43,9 @@ def scrape_symbol_data(symbol_name):
                 "Day Low": cells[7].text.strip(),
                 "Volume": cells[8].text.strip(),
             }
+            print(f"Scraped data for {symbol_name}: {data}")
             return data
+    print(f"No data found for {symbol_name}")
     return None
 
 # Scrape Today's Share Price Summary
@@ -57,6 +59,7 @@ def scrape_today_share_price():
         "52 Week High": table_data[19].text.strip(),
         "52 Week Low": table_data[20].text.strip(),
     }
+    print(f"Today's share price summary: {data}")
     return data
 
 # Function to Refresh Data Every 10 Minutes
@@ -64,6 +67,7 @@ def refresh_data():
     global latest_data
     print("Refreshing data from Sharesansar...")
     latest_data["general_data"] = scrape_today_share_price()
+    print(f"Latest general data: {latest_data['general_data']}")
 
 # Telegram Command Handlers
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -85,6 +89,7 @@ async def handle_symbol_or_input(update: Update, context: ContextTypes.DEFAULT_T
         if not symbol_name or symbol_name.startswith("/"):
             return
         
+        print(f"Received symbol: {symbol_name}")
         symbol_data = scrape_symbol_data(symbol_name)
         general_data = latest_data.get("general_data", {})
 
