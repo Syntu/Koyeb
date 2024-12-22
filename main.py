@@ -110,6 +110,24 @@ async def handle_symbol_or_input(update: Update, context: ContextTypes.DEFAULT_T
     except Exception as e:
         print(f"Error in handle_symbol_or_input: {e}")
 
+# Initialize Application
+tg_app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+# Add Command Handlers
+tg_app.add_handler(CommandHandler("start", start))
+tg_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_symbol_or_input))
+
+# Initialize Scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(refresh_data, "interval", minutes=10)
+scheduler.start()
+
+# Refresh Data Initially
+refresh_data()
+
+# Set Webhook
+tg_app.bot.set_webhook(WEBHOOK_URL)
+
 # Telegram Webhook Endpoint
 @app.route("/webhook", methods=["POST"])
 def webhook():
@@ -124,24 +142,6 @@ def webhook():
 
 if __name__ == "__main__":
     try:
-        # Initialize Application
-        tg_app = ApplicationBuilder().token(BOT_TOKEN).build()
-        
-        # Add Command Handlers
-        tg_app.add_handler(CommandHandler("start", start))
-        tg_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_symbol_or_input))
-
-        # Initialize Scheduler
-        scheduler = BackgroundScheduler()
-        scheduler.add_job(refresh_data, "interval", minutes=10)
-        scheduler.start()
-
-        # Refresh Data Initially
-        refresh_data()
-
-        # Set Webhook
-        tg_app.bot.set_webhook(WEBHOOK_URL)
-
         # Run Flask App
         print("Running Flask app...")
         app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8443)))
