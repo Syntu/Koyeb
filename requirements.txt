@@ -1,7 +1,6 @@
-flask
+Flask==2.0.3
+requests==2.26.0
+beautifulsoup4==4.10.0
 python-telegram-bot==20.3
-requests==2.31.0
-beautifulsoup4==4.12.2
-apscheduler
-gunicorn
-python-dotenv
+apscheduler==3.7.0
+python-dotenv==0.19.2
